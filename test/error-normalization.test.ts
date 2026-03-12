@@ -122,6 +122,31 @@ test("normalizeOutputError infers AUTH_REQUIRED detail from ACP payload", () => 
   assert.equal(normalized.acp?.code, -32000);
 });
 
+test("normalizeOutputError extracts ACP payload from wrapped errors", () => {
+  const wrapped = new Error("Agent rejected session/set_mode");
+  (
+    wrapped as Error & {
+      acp?: { code: number; message: string; data?: unknown };
+    }
+  ).acp = {
+    code: -32602,
+    message: "Invalid params",
+    data: {
+      method: "session/set_mode",
+      modeId: "plan",
+    },
+  };
+
+  const normalized = normalizeOutputError(wrapped);
+
+  assert.equal(normalized.code, "RUNTIME");
+  assert.equal(normalized.acp?.code, -32602);
+  assert.deepEqual(normalized.acp?.data, {
+    method: "session/set_mode",
+    modeId: "plan",
+  });
+});
+
 test("exitCodeForOutputErrorCode maps machine codes to stable exits", () => {
   assert.equal(exitCodeForOutputErrorCode("USAGE"), 2);
   assert.equal(exitCodeForOutputErrorCode("TIMEOUT"), 3);

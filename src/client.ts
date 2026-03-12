@@ -703,7 +703,13 @@ function maybeWrapSessionControlError(
   const message =
     `Agent rejected ${method}${contextSuffix}: ${acpSummary}. ` +
     `The adapter may not implement ${method}, or the requested value is not supported.`;
-  return new Error(message);
+  const wrapped = new Error(message, {
+    cause: error instanceof Error ? error : undefined,
+  }) as Error & {
+    acp?: typeof acp;
+  };
+  wrapped.acp = acp;
+  return wrapped;
 }
 
 function buildAgentEnvironment(

@@ -51,6 +51,13 @@ function extractAcpErrorInternal(value: unknown, depth: number): OutputErrorAcpP
     }
   }
 
+  if ("acp" in record) {
+    const nested = extractAcpErrorInternal(record.acp, depth + 1);
+    if (nested) {
+      return nested;
+    }
+  }
+
   if ("cause" in record) {
     const nested = extractAcpErrorInternal(record.cause, depth + 1);
     if (nested) {
